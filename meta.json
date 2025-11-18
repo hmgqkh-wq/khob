@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "name": "xeno-turnip-adreno-logger",
+  "description": "Xeno B-Easy Ultra-Deep Vulkan & system collector (MrPurple-style name). Produces deep feature and environment logs for final wrapper design.",
+  "author": "xeno-collector",
+  "packageVersion": "0.1",
+  "vendor": "xeno",
+  "driverVersion": "1.0.0",
+  "minApi": 30,
+  "libraryName": "libvulkan.xeno_wrapper.so"
+}
