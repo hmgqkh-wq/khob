@@ -1,19 +1,29 @@
-cmake_minimum_required(VERSION 3.6)
-project(vulkan_xeno_wrapper C)
+cmake_minimum_required(VERSION 3.10)
+project(vulkan_xeno_wrapper LANGUAGES C)
 
-set(CMAKE_C_STANDARD 11)
-set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+# Android + Vulkan
+find_library(log-lib log)
+find_library(android-lib android)
+find_library(vulkan-lib vulkan)
 
-include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
+# Build the B-Easy wrapper .so
+add_library(vulkan.xeno.wrapper SHARED
+    xeno_wrapper.c
+)
 
-file(GLOB SRC_FILES ${CMAKE_CURRENT_SOURCE_DIR}/src/*.c)
+# Include directory for the wrapper
+target_include_directories(vulkan.xeno.wrapper PRIVATE
+    ${CMAKE_SOURCE_DIR}
+)
 
-# Build shared library named exactly libvulkan.xeno_wrapper.so
-add_library(vulkan.xeno_wrapper SHARED ${SRC_FILES})
+# Link system dependencies
+target_link_libraries(vulkan.xeno.wrapper
+    ${vulkan-lib}
+    ${log-lib}
+    ${android-lib}
+)
 
-set_target_properties(vulkan.xeno.wrapper PROPERTIES PREFIX "lib" OUTPUT_NAME "vulkan.xeno_wrapper")
-# Ensure filename is libvulkan.xeno_wrapper.so
-set_target_properties(vulkan.xeno.wrapper PROPERTIES OUTPUT_NAME "vulkan.xeno_wrapper")
-
-# Link dl (for dlsym) and pthread
-target_link_libraries(vulkan.xeno.wrapper PRIVATE -ldl -lpthread)
+# Make sure output name matches Eden expectation
+set_target_properties(vulkan.xeno.wrapper PROPERTIES
+    OUTPUT_NAME "libvulkan.xeno_wrapper"
+)
