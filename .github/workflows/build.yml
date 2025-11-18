@@ -1,58 +1,62 @@
-name: Build Xeno Vulkan Wrapper (B-Easy)
+name: Build ARM64 Vulkan Wrapper (B-Easy)
 
 on:
   push:
-    branches: [ "main" ]
-  workflow_dispatch:
+    branches: [ main ]
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
+    - name: Checkout repository
+      uses: actions/checkout@v4
 
-      - name: Install Android NDK
-        uses: nttld/setup-ndk@v1
-        with:
-          ndk-version: r26d
+    - name: Install Android NDK
+      uses: nttld/setup-ndk@v1
+      with:
+        ndk-version: r27c
+        add-to-path: true
 
-      - name: Configure CMake
-        run: |
-          mkdir -p build
-          cd build
-          cmake \
-            -DCMAKE_BUILD_TYPE=Release \
-            -DCMAKE_TOOLCHAIN_FILE=$ANDROID_NDK_HOME/build/cmake/android.toolchain.cmake \
-            -DANDROID_ABI=arm64-v8a \
-            -DANDROID_PLATFORM=android-30 \
-            ..
+    - name: Configure CMake
+      run: |
+        cmake -B build \
+          -DCMAKE_SYSTEM_NAME=Android \
+          -DCMAKE_ANDROID_ARCH_ABI=arm64-v8a \
+          -DCMAKE_SYSTEM_VERSION=30 \
+          -DCMAKE_ANDROID_NDK=$ANDROID_NDK \
+          -DCMAKE_ANDROID_STL_TYPE=c++_static \
+          .
 
-      - name: Build .so
-        run: |
-          cd build
-          cmake --build . --config Release -- -j8
+    - name: Build .so
+      run: |
+        cmake --build build --target vulkan.xeno.wrapper --config Release
 
-      - name: Prepare output
-        run: |
-          mkdir -p output
-          cp build/libvulkan.xeno_wrapper.so output/libvulkan.xeno_wrapper.so
-          cp meta.json output/meta.json
+    - name: Prepare output
+      run: |
+        mkdir -p output
+        # copy any produced .so matching the wrapper name
+        SOFILE=$(ls build | grep -Ei "vulkan.*xeno.*wrapper.*\.so")
+        cp "build/$SOFILE" output/
 
-      - name: Create ZIP
-        run: |
-          cd output
-          zip xeno_wrapper.zip libvulkan.xeno_wrapper.so meta.json
+        # copy meta.json if present
+        if [ -f meta.json ]; then
+          cp meta.json output/
+        fi
 
-      - name: Upload .so artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: libvulkan.xeno_wrapper
-          path: output/libvulkan.xeno_wrapper.so
+    - name: Create ZIP
+      run: |
+        cd output
+        zip -r wrapper_build.zip .
 
-      - name: Upload ZIP artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: xeno_wrapper_zip
-          path: output/xeno_wrapper.zip
+    - name: Upload .so artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: built-wrapper
+        path: output/*.so
+
+    - name: Upload ZIP artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: wrapper-zip
+        path: output/wrapper_build.zip
