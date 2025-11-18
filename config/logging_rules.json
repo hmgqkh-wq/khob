@@ -1,0 +1,14 @@
+{
+  "level": "info",
+  "write_locations": [
+    "/sdcard/eden_wrapper/logs/eden_log.txt",
+    "/storage/emulated/0/eden_wrapper/events/xeno_feature_summary.json"
+  ],
+  "rules": {
+    "system": true,
+    "vulkan_loader": true,
+    "sysfs_probe": true,
+    "feature_dump": true
+  },
+  "notes": "B-easy: deep collector logging rules (informational only)"
+}
